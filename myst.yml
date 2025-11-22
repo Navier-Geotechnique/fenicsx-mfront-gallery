@@ -17,6 +17,7 @@ project:
     - title: Finite Element Analysis with FEniCSx
       children:
         - file: FEniCSx/introduction.md
+        - file: FEniCSx/poisson.ipynb
         - title: Mixed Formulations
           children:
             - file: FEniCSx/mixed_formulations.ipynb
