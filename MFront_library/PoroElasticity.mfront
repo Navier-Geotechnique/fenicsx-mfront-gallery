@@ -1,6 +1,8 @@
 @DSL DefaultGenericBehaviour;
 @Author Maxime PIERRE;
-@Behaviour PoroElasticity_Maxime;
+@Date 22/11/2025;
+
+@Behaviour PoroElasticity;
 
 @ExternalStateVariable stress pₗ;
 pₗ.setEntryName("LiquidPressure");
@@ -52,7 +54,7 @@ mₗ.setEntryName("LiquidMass");
     λ = computeLambda(E, ν);
     μ = computeMu(E, ν);
     σ += λ⋅trace(Δεᵗᵒ)⋅I₂ + 2⋅μ⋅Δεᵗᵒ - b⋅Δpₗ⋅I₂ ;
-  
+
     φₗ += b⋅trace(Δεᵗᵒ) + 1/N_biot⋅Δpₗ ;
 
     φ = φₗ + φ₀ ;

@@ -1,0 +1,31 @@
+@DSL DefaultGenericBehaviour;
+@Author Maxime Pierre;
+@Date 22/11/2025;
+
+@Behaviour Elasticity;
+
+@Gradient StrainStensor εᵗᵒ;
+εᵗᵒ.setGlossaryName("Strain");
+
+@Flux StressStensor σ;
+σ.setGlossaryName("Stress");
+
+@TangentOperatorBlocks{∂σ∕∂Δεᵗᵒ};
+
+@MaterialProperty real ν;
+ν.setGlossaryName("PoissonRatio");
+
+@MaterialProperty stress E;
+E.setGlossaryName("YoungModulus");
+
+@ProvidesTangentOperator ;
+
+@Integrator{
+  const auto λ = computeLambda(E, ν);
+  const auto μ = computeMu(E, ν);
+  σ += λ ⋅ trace(Δεᵗᵒ) ⋅ I₂ + 2 ⋅ μ ⋅ Δεᵗᵒ ;
+
+  if (computeTangentOperator_) {
+    ∂σ∕∂Δεᵗᵒ = λ ⋅ (I₂ ⊗ I₂) + 2 ⋅ μ ⋅ I₄;
+  }
+}
