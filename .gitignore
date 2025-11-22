@@ -1,2 +1,7 @@
 .DS_Store
 */.ipynb_checkpoints
+*.dylib
+*.so
+
+# MyST build outputs
+_build
