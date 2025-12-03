@@ -3,5 +3,8 @@
 *.dylib
 *.so
 
+include
+src
+
 # MyST build outputs
 _build
