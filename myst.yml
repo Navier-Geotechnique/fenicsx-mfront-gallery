@@ -17,10 +17,12 @@ project:
       children:
         - file: MFront/introduction.md
         - file: MFront/Elasticity.ipynb
+        - file: MFront/poroelasticity.ipynb
     - title: Finite Element Analysis with FEniCSx
       children:
         - file: FEniCSx/introduction.md
         - file: FEniCSx/poisson.ipynb
+        - file: FEniCSx/poroelasticity.ipynb
         - title: Mixed Formulations
           children:
             - file: FEniCSx/mixed_formulations.ipynb
@@ -39,7 +41,7 @@ site:
   #     url: /guide
   #   - title: Overview
   #     url: /overview
-  # options:
-  #   favicon: favicon.ico
-  #   logo: site_logo.png
+  options:
+    favicon: assets/favicon.ico
+    logo: assets/site_logo.png
   #
