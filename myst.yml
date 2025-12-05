@@ -18,6 +18,7 @@ project:
         - file: MFront/introduction.md
         - file: MFront/Elasticity.ipynb
         - file: MFront/poroelasticity.ipynb
+        - file: MFront/poroplasticity.ipynb
     - title: Finite Element Analysis with FEniCSx
       children:
         - file: FEniCSx/introduction.md
