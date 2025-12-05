@@ -1,0 +1,12 @@
+@Behaviour<Generic> 'src/libBehaviour.dylib' 'Elasticity';
+@MaterialProperty<constant> 'YoungModulus' 1e+10 ;
+@MaterialProperty<constant> 'PoissonRatio' 0.2 ;
+
+@ExternalStateVariable 'Temperature' 293.15 ;
+
+@ImposedDrivingVariable 'StrainXX' 0.0;
+@ImposedDrivingVariable 'StrainYY' 0.0;
+
+@ImposedThermodynamicForce 'StressZZ' {0.0: 0.0, 1.0: -1e7};
+
+@Times {0.0, 1.0 in 10};
