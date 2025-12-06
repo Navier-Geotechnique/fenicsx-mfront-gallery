@@ -15,10 +15,10 @@ project:
     - file: home.md
     - title: Implementing material behaviors with MFront
       children:
-        - file: MFront/introduction.md
-        - file: MFront/Elasticity.ipynb
-        - file: MFront/poroelasticity.ipynb
-        - file: MFront/poroplasticity.ipynb
+        - file: Mfront/introduction.md
+        - file: Mfront/Elasticity.ipynb
+        - file: Mfront/poroelasticity.ipynb
+        - file: Mfront/poroplasticity.ipynb
     - title: Finite Element Analysis with FEniCSx
       children:
         - file: FEniCSx/introduction.md
