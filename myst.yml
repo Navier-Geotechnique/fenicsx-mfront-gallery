@@ -15,24 +15,24 @@ project:
     - file: home.md
     - title: Implementing material behaviors with MFront
       children:
-        - file: Mfront/introduction.md
-        - file: Mfront/Elasticity.ipynb
-        - file: Mfront/poroelasticity.ipynb
-        - file: Mfront/poroplasticity.ipynb
+        - file: mfront/introduction.md
+        - file: mfront/elasticity.ipynb
+        - file: mfront/poroelasticity.ipynb
+        - file: mfront/poroplasticity.ipynb
     - title: Finite Element Analysis with FEniCSx
       children:
-        - file: FEniCSx/introduction.md
-        - file: FEniCSx/poisson.ipynb
-        - file: FEniCSx/poroelasticity.ipynb
+        - file: fenicsx/introduction.md
+        - file: fenicsx/poisson.ipynb
+        - file: fenicsx/poroelasticity.ipynb
         - title: Mixed Formulations
           children:
-            - file: FEniCSx/mixed_formulations.ipynb
-            - file: FEniCSx/mixed_formulations_2.ipynb
+            - file: fenicsx/mixed_formulations.ipynb
+            - file: fenicsx/mixed_formulations_2.ipynb
     - title: Demos coupling FEniCSx & MFront
       children:
-        - file: FEniCSx_MFront/introduction.md
-        - file: FEniCSx_MFront/1_Nonlinear_Heat_Transfer/nonlinear_heat_transfer.ipynb
-        - file: FEniCSx_MFront/2_Poroelasticity/poroelasticity.ipynb
+        - file: fenicsx_mfront/introduction.md
+        - file: fenicsx_mfront/1_Nonlinear_Heat_Transfer/nonlinear_heat_transfer.ipynb
+        - file: fenicsx_mfront/2_Poroelasticity/poroelasticity.ipynb
 
 site:
   template: book-theme
