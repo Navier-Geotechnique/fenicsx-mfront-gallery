@@ -30,9 +30,9 @@ project:
             - file: FEniCSx/mixed_formulations_2.ipynb
     - title: Demos coupling FEniCSx & MFront
       children:
-        - file: FEniCSx_Mfront/introduction.md
-        - file: FEniCSx_Mfront/1_Nonlinear_Heat_Transfer/nonlinear_heat_transfer.ipynb
-        - file: FEniCSx_Mfront/2_Poroelasticity/poroelasticity.ipynb
+        - file: FEniCSx_MFront/introduction.md
+        - file: FEniCSx_MFront/1_Nonlinear_Heat_Transfer/nonlinear_heat_transfer.ipynb
+        - file: FEniCSx_MFront/2_Poroelasticity/poroelasticity.ipynb
 
 site:
   template: book-theme
