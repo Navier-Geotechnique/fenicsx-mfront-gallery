@@ -1,0 +1,96 @@
+@DSL ImplicitGenericBehaviour;
+@Author Maxime PIERRE;
+@Behaviour CamClay;
+@Algorithm NewtonRaphson_NumericalJacobian ;
+@Theta 1. ;
+@Epsilon 10e-14 ;
+@PerturbationValueForNumericalJacobianComputation 1.e-9;
+
+
+@Gradient StrainStensor εᵗᵒ;
+εᵗᵒ.setGlossaryName("Strain");
+
+@Flux StressStensor σ;
+σ.setGlossaryName("Stress");
+
+@MaterialProperty stress E;
+E.setGlossaryName("YoungModulus");
+@MaterialProperty real ν;
+ν.setGlossaryName("PoissonRatio");
+@MaterialProperty real b;
+
+@MaterialProperty real k;
+k.setEntryName("ACC_k");
+@MaterialProperty real M;
+M.setEntryName("ACC_M");
+@MaterialProperty real h_ε ;
+h_ε.setEntryName("VolumetricHardening");
+
+@StateVariable StrainStensor ε_el;
+ε_el.setGlossaryName("ElasticStrain");
+@StateVariable real λ_p;
+λ_p.setGlossaryName("EquivalentPlasticStrain");
+@AuxiliaryStateVariable stress pc;
+pc.setEntryName("PreconsolidationPressure");
+@IntegrationVariable strain rpc ;
+
+@AuxiliaryStateVariable stress p;
+@AuxiliaryStateVariable stress q;
+
+@LocalVariable stress λ;
+@LocalVariable stress μ;
+@LocalVariable real F_el;
+@LocalVariable Stensor n;
+
+@TangentOperatorBlocks{∂σ∕∂Δεᵗᵒ};
+
+@InitLocalVariables{
+    λ = computeLambda(E, ν);
+    μ = computeMu(E, ν);
+    rpc = pc / E ;
+    const auto   σ_el  =  σ + λ ⋅ trace(Δεᵗᵒ) ⋅ I₂ + 2 ⋅ μ ⋅ (Δεᵗᵒ) ;
+    const stress p_el  =  trace(σ_el)/3. ;
+    const stress q_el  =  sigmaeq(deviator(σ_el)) ;
+    const stress pc_el =  pc ;
+    const stress pt_el =  ft ⋅ pc ;
+    Stensor σ_D_el  =  deviator(σ_el);
+    p    =  trace(σ_el)/3. ;
+    q    =  sigmaeq(σ_D_el) ;
+    F_el  =  q_el ⋅ q_el ⋅ exp( k  ⋅ ( 2 ⋅ p_el + pt_el - pc_el)/(pt_el+pc_el)) + M ⋅ M ⋅ (p_el+pt_el) ⋅ (p_el-pc_el) ;
+}
+
+@Integrator{
+    if(F_el > 0){
+        const real   rpc_  =  rpc + theta ⋅ Δrpc ;
+        const StressStensor σ_ =  σ + λ ⋅ trace(theta ⋅ Δε_el) ⋅ I₂ + 2 ⋅ μ ⋅ (theta ⋅ Δε_el);
+        const stress pc_   =   E ⋅ rpc_ ;
+        const stress pt_   =  ft ⋅ pc_ ;
+        Stensor σ_D  =  deviator(σ_);
+        p    =  trace(σ_)/3. ;
+        q    =  sigmaeq(σ_D) ;
+
+        const real ∂g∕∂p  =  2⋅k / (pt_ + pc_) ⋅q⋅q ⋅ exp( k ⋅ (2⋅p + pt_ - pc_) / (pt_ + pc_)) + M⋅M ⋅ (2⋅p + pt_ - pc_ ) ;
+        const real ∂g∕q∂q =  2 ⋅ exp( k ⋅ (2⋅p + pt_ - pc_) / (pt_ + pc_)) ;
+        const auto ∂g∕∂σ  =  ∂g∕∂p / 3. ⋅ I₂ + 1.5 ⋅ ∂g∕q∂q ⋅ σ_D ;
+        n  =  1. / ( std::sqrt(∂g∕∂σ|∂g∕∂σ) ) ⋅ ∂g∕∂σ ;
+
+        fε_el  =  Δε_el - Δεᵗᵒ + Δλ_p ⋅ n ;
+        fλ_p   =  ( q⋅q ⋅ exp( k ⋅ (2⋅p + pt_ - pc_) / (pt_ + pc_)) + M⋅M ⋅ (p + pt_) ⋅ (p - pc_) )/pow(E,2);
+        frpc   =  (Δrpc + (Δλ_p ⋅ trace(n)) ⋅ h_ε ⋅ rpc_) ;
+    } else {
+        fε_el  =  Δε_el - Δεᵗᵒ ;
+    }
+}
+
+@UpdateAuxiliaryStateVariables{
+    pc += Δrpc ⋅ E;
+    σ += λ⋅trace(Δε_el)⋅I₂ + 2⋅μ⋅Δε_el;
+}
+
+@TangentOperator{
+    StiffnessTensor De = λ ⋅ (I₂ ⊗ I₂) + 2 ⋅ μ ⋅ I₄;
+    ∂fε_el∕∂Δεᵗᵒ = - I₄ ;
+    Stensor4 ∂Δε_el∕∂Δεᵗᵒ ;
+    getIntegrationVariablesDerivatives_εᵗᵒ(∂Δε_el∕∂Δεᵗᵒ);
+    ∂σ∕∂Δεᵗᵒ = De ⋅ ∂Δε_el∕∂Δεᵗᵒ;
+}
