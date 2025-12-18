@@ -18,7 +18,6 @@ E.setGlossaryName("YoungModulus");
 @MaterialProperty real ν;
 ν.setGlossaryName("PoissonRatio");
 @MaterialProperty real b;
-
 @MaterialProperty real k;
 k.setEntryName("ACC_k");
 @MaterialProperty real M;
