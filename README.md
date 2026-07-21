@@ -9,9 +9,7 @@ Both `FEniCSx` and `MFront` are now available through the [conda-forge](https://
 
 An additional important package is [`dolfinx_materials`](https://github.com/bleyerj/dolfinx_materials).
 
-**Note:** This package is designed for `FEniCSx` version 0.8.0, while the current `FEniCSx` version available via Conda is 0.9.0. As a result, some modifications are required to ensure compatibility.
-
-The accompanying zip file includes key example scripts and test cases that will be used later.
+**Note:** At the date of the last modification of this guide (16/07/2026), `dolfinx_materials` (v0.4.0) is designed for `FEniCSx` **0.10.x**, while the default version available via conda-forge is already 0.11.0 (or later). Installing 0.11 will break `dolfinx_materials` with `ImportError: cannot import name '_assign_block_data'`, so `fenics-dolfinx` **must be pinned to 0.10**. Note also that `fenics-dolfinx` is not compatible with Python 3.13+.
 
 ---
 
@@ -23,7 +21,7 @@ You can download the installer from the [official Anaconda website](https://www.
 
 ```bash
 wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
-````
+```
 
 ### Run the installer
 
@@ -43,11 +41,11 @@ source ~/.bashrc
 
 ## Step 2 – Install Required Packages
 
-### Create and activate a virtual environment (optional)
+### Create and activate a virtual environment, with a name of mfront (for example)
 
 ```bash
-conda create -n fenicsx
-conda activate fenicsx
+conda create -n mfront python=3.12
+conda activate mfront
 ```
 
 ### Install additional useful packages
@@ -56,10 +54,13 @@ conda activate fenicsx
 conda install -c conda-forge jupyterlab pandas matplotlib scipy meshio pyvista openpyxl trame trame-vtk trame-vuetify ipywidgets gmsh tqdm python-gmsh
 ```
 
-### Install FEniCSx
+### Download `dolfinx_materials`
+
+Clone the repository now — its demos provide the `.mfront` files used to verify the MFront installation in the next step. The package itself will be installed later, once `FEniCSx` is available:
 
 ```bash
-conda install -c conda-forge fenics-dolfinx fenics-libdolfinx
+cd ~
+git clone https://github.com/bleyerj/dolfinx_materials.git
 ```
 
 ### Install MFront and MGIS
@@ -68,37 +69,117 @@ conda install -c conda-forge fenics-dolfinx fenics-libdolfinx
 conda install -c conda-forge mfront mgis
 ```
 
-### Install the modified `dolfinx_materials`
+#### Configure `TFELHOME`
 
-Navigate to the directory where the modified version is located. This version has been adapted to ensure compatibility with the current `FEniCSx` version.
+The conda-forge build of MFront ships with a **build-time placeholder path** baked in, which no longer exists after the package is relocated into your environment. As a result, `mfront --obuild` generates a `Makefile.mfront` pointing to a non-existent `include/` directory and compilation fails with:
+
+```
+fatal error: TFEL/Raise.hxx: No such file or directory
+```
+
+You can check this by running:
 
 ```bash
-cd dolfinx_materials-0.3.0
+tfel-config --includes
+# -I/home/conda/feedstock_root/build_artifacts/bld/rattler-build_mfront_.../placehold_placehold.../include
+```
+
+MFront resolves its installation prefix from the `TFELHOME` environment variable first, so setting it to `$CONDA_PREFIX` fixes the issue:
+
+```bash
+export TFELHOME="$CONDA_PREFIX"
+tfel-config --includes
+# -I/home/<user>/anaconda3/envs/mfront/include
+```
+
+To make this automatic, add an activation hook so that `TFELHOME` is set whenever the environment is activated and unset on deactivation. This keeps the variable scoped to this environment only and does not pollute `~/.bashrc` or other environments:
+
+```bash
+mkdir -p "$CONDA_PREFIX/etc/conda/activate.d" "$CONDA_PREFIX/etc/conda/deactivate.d"
+
+cat > "$CONDA_PREFIX/etc/conda/activate.d/tfel.sh" << 'EOF'
+export TFELHOME="$CONDA_PREFIX"
+EOF
+
+cat > "$CONDA_PREFIX/etc/conda/deactivate.d/tfel.sh" << 'EOF'
+unset TFELHOME
+EOF
+```
+
+Reactivate and verify:
+
+```bash
+conda deactivate
+conda activate mfront
+echo "$TFELHOME"     # should print the path of your conda environment
+```
+
+
+#### Verification
+
+Compile the `StationaryHeatTransfer.mfront` behaviour shipped with the `dolfinx_materials` demos:
+
+```bash
+cd ~/dolfinx_materials/demos/mfront/heat_transfer/
+rm -rf include src
+mfront --obuild --interface=generic StationaryHeatTransfer.mfront
+```
+
+Removing the `include/` and `src/` directories beforehand is recommended, since MFront reuses previously generated files and a stale `Makefile.mfront` may still contain the wrong include paths.
+
+The build succeeds if `src/libBehaviour.so` is generated. A warning about tangent operator blocks may appear; it is harmless here.
+
+### Install FEniCSx
+
+Pin the version to 0.10 for compatibility with `dolfinx_materials` (see the note at the top):
+
+```bash
+conda install -c conda-forge "fenics-dolfinx=0.10"
+```
+
+This installs the whole FEniCS stack consistently (`fenics-basix`, `fenics-ffcx`, `fenics-ufl`, `fenics-libdolfinx`) without touching `petsc4py`, MPI or NumPy.
+
+### Install `dolfinx_materials`
+
+Now that `FEniCSx` is available, install the package cloned earlier:
+
+```bash
+cd ~/dolfinx_materials
 pip install .
 ```
+
+Verify the installation:
+
+```bash
+python -c "from dolfinx_materials.solvers import NonlinearMaterialProblem; print('OK')"
+```
+
+If this raises `ImportError: cannot import name '_assign_block_data' from 'dolfinx.fem.petsc'`, your `fenics-dolfinx` is 0.11 or newer — downgrade it as described above.
 
 ---
 
 ## Step 3 – Run the Example Tests
 
-### Test 1 – Nonlinear Heat Transfer
+### Nonlinear Heat Transfer
 
-This example (from demos of `dolfinx_materials`) solves a nonlinear steady-state heat transfer problem using an MFront material behavior.
+This example (from the demos of `dolfinx_materials`) solves a nonlinear steady-state heat transfer problem using an MFront material behavior.
+
+The behaviour library has already been compiled during the verification step above. If needed, rebuild it with:
+
+```bash
+cd ~/dolfinx_materials/demos/mfront/heat_transfer/
+mfront --obuild --interface=generic StationaryHeatTransfer.mfront
+```
+
+This generates the `include/` and `src/` directories.
 
 #### Start JupyterLab
 
 ```bash
+cd ~/dolfinx_materials/demos/mfront/heat_transfer/
 jupyter lab &
-cd Files/Test_1_Nonlinear_Heat_Transfer/
 ```
 
-#### Compile the MFront file
-
-```bash
-mfront --obuild --interface=generic StationaryHeatTransfer.mfront
-```
-
-This will generate `include/` and `src/` directories.
 The notebook `nonlinear_heat_transfer.ipynb` contains the full calculation setup.
 
 **Note:** When defining the material, make sure to use the appropriate library extension: `.so` for Linux and `.dylib` for macOS.
@@ -110,30 +191,5 @@ material = MFrontMaterial(
     hypothesis="plane_strain",
 )
 ```
-
----
-
-### Test 2 – Poroelastic Simulation
-
-This example, developed by [Maxime Pierre](https://mhpierre.github.io/), simulates uniaxial loading on a poroelastic medium under plane strain conditions. The bottom boundary is fixed in vertical displacement, with drainage at the top.
-
-#### Start JupyterLab
-
-```bash
-jupyter lab &
-cd Test_2_Poroelasticity
-```
-
-#### Compile the MFront file
-
-```bash
-mfront --obuild --interface=generic Maxime_PoroElasticity.mfront
-```
-
-After running the Jupyter notebook, the simulation results (pore pressure, displacement, stress) are saved in the `results/` folder and can be visualized using ParaView.
-
-
-
-
 
 ## More demos are under development...
